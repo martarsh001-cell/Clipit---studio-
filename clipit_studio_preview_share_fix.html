@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d18">
+<title>ClipIt Studio</title>
+<style>
+:root{color-scheme:dark;--bg:#090b14;--panel:#121629;--panel2:#171d34;--line:#2b3152;--text:#f5f6ff;--muted:#a6adc9;--purple:#8b5cf6;--blue:#397bff;--pink:#d946ef}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#171634 0,#090b14 52%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#0b0d18ed;backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:23px;font-weight:900;letter-spacing:-1px}.brand span{color:#a78bfa}.tag{font-size:11px;color:#c4b5fd;border:1px solid #54418c;border-radius:999px;padding:4px 8px}
+main{max-width:960px;margin:auto;padding:16px;display:grid;gap:14px}.card{background:linear-gradient(150deg,#151a30,#101424);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 12px 35px #0002}
+h1{font-size:24px;line-height:1.12;margin:0 0 8px}h2{font-size:17px;margin:0 0 12px}p{margin:6px 0;color:var(--muted)}.sub{font-size:13px;color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.grow{flex:1;min-width:140px}
+button,.button{border:0;border-radius:12px;background:linear-gradient(100deg,var(--purple),var(--blue));color:white;font-weight:750;padding:12px 15px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+button.secondary{background:#202744;border:1px solid #3a426a;color:#e8eaff}button:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{width:100%;background:#0b1020;border:1px solid #333b60;border-radius:10px;padding:11px;color:var(--text);font:inherit;min-width:0}
+label{display:block;color:#dfe3ff;font-size:13px;font-weight:650;margin:11px 0 6px}
+.drop{border:1.5px dashed #6253a6;border-radius:14px;text-align:center;padding:22px 12px;background:#15152a;cursor:pointer}.drop strong{display:block;margin:7px 0}.drop input{display:none}
+.preview{background:#03050a;border-radius:14px;overflow:hidden;position:relative;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;min-height:180px}
+video{width:100%;max-height:56vh;display:block;background:#03050a}#youtubeEmbed{display:none;width:100%;aspect-ratio:16/9;max-height:56vh;border:0;background:#03050a;flex:0 0 auto}.previewFallback{display:none;padding:18px;text-align:center;width:100%;background:#0d1222;flex:0 0 auto}.previewFallback p{margin:0 0 10px}canvas{display:none}
+.status{font-size:13px;color:#c4b5fd;margin-top:8px;overflow-wrap:anywhere}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:#0d1222;border:1px solid #2b3152;border-radius:12px;padding:10px}.stat b{display:block;font-size:18px}.stat small{color:var(--muted)}
+.pill{display:inline-block;background:#292044;color:#e2d5ff;border-radius:8px;padding:3px 7px;font-size:11px}
+#progress{width:100%;accent-color:#9b75ff} .notice{border-left:3px solid #a78bfa;padding:9px 12px;background:#17162a;border-radius:0 9px 9px 0;font-size:13px;color:#d5d8f0}
+footer{text-align:center;color:#8188a6;font-size:12px;padding:10px 20px 28px}
+@media(min-width:760px){main{grid-template-columns:1fr 1fr;align-items:start}.wide{grid-column:1/-1}.editor{grid-column:1/-1}.preview video{max-height:440px}}
+@media(max-width:420px){main{padding:10px}.card{padding:13px}.two{gap:8px}.three{grid-template-columns:1fr 1fr}.brand{font-size:21px}}
+</style>
+</head>
+<body>
+<header><div class="brand">✂ Clip<span>It</span> Studio</div><div class="tag">CREATOR TOOLKIT · V2</div></header>
+<main>
+<section class="card">
+<h1>Turn a video into a short clip.</h1>
+<p>Import a video, choose the exact section, add a caption and export a shareable clip.</p>
+<div class="drop" id="drop">
+  <div style="font-size:30px">⬆️</div><strong>Tap to choose a video</strong>
+  <span class="sub">MP4 · WebM · MOV (browser-supported formats)</span>
+  <input type="file" id="file" accept="video/*">
+</div>
+<div class="status" id="fileStatus">No video selected yet.</div>
+<div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px">
+  <label for="videoUrl">Paste a video share link or direct URL</label>
+  <input id="videoUrl" type="url" inputmode="url" placeholder="TikTok, YouTube, Drive, Dropbox, or .mp4 link" autocomplete="url">
+  <button id="loadUrl" type="button" style="margin-top:8px;width:100%">Load share link</button>
+  <button id="openYoutube" class="secondary" type="button" style="margin-top:8px;width:100%">Open YouTube video</button>
+  <p class="sub">Direct video links and some Google Drive/Dropbox share links can load. TikTok, YouTube, and Instagram share pages generally cannot be imported directly into an editor because the platforms restrict access. Download a video you have permission to use, then import the file.</p>
+</div>
+<label for="platform">Where will you post it?</label>
+<select id="platform"><option>TikTok</option><option>YouTube Shorts</option><option>Instagram Reels</option><option>Facebook Reels</option><option>LinkedIn</option><option>X</option><option>Any platform / custom</option></select>
+<p class="sub">The editor can prepare clips for different platforms. It does not download protected videos from platform URLs.</p>
+</section>
+<section class="card wide" id="highlightCard">
+<h2>✨ YouTube Highlight Finder <span class="pill">BETA</span></h2>
+<p>Paste a public YouTube link and its timestamped transcript. Find five 15-second highlight windows, draft hooks and social captions, and jump to moments on YouTube. This version does not fetch restricted captions or video files automatically.</p>
+<label for="transcriptInput">Transcript with timestamps</label>
+<textarea id="transcriptInput" rows="7" placeholder="Example:
+[00:12] Today I'm going to show you the biggest mistake people make...
+[00:45] The secret is to start small and stay consistent...
+1:12 This changed the way I think about money..."></textarea>
+<div class="row" style="margin-top:10px"><button id="analyzeTranscript" type="button">Find 5 highlights · 15 sec each</button><button id="clearTranscript" class="secondary" type="button">Clear</button></div>
+<p class="sub">Tip: open the video on YouTube, use “Show transcript” if available, and copy the timestamped transcript here. If you only paste plain text without timestamps, the suggestions cannot link to exact moments.</p>
+<div class="card" style="margin-top:12px;background:#0d1223;box-shadow:none">
+  <h3 style="margin-top:0">✨ Creator AI toolkit</h3>
+  <p class="sub">Generate a starter hook, post caption, and hashtags from the transcript you pasted. This offline helper uses text rules, not a connected AI model; use the prompt button to send a prompt to an AI service you choose.</p>
+  <label for="creatorTone">Style</label><select id="creatorTone"><option value="motivational">Motivational</option><option value="educational">Educational</option><option value="bold">Bold / curiosity</option><option value="professional">Professional</option></select>
+  <div class="row" style="margin-top:8px"><button id="generatePack" type="button">Generate creator pack</button><button id="copyAIPrompt" class="secondary" type="button">Copy AI prompt</button></div>
+  <label for="creatorHook">Hook / title</label><textarea id="creatorHook" rows="2" placeholder="Your suggested hook appears here"></textarea>
+  <label for="creatorCaption">Social caption</label><textarea id="creatorCaption" rows="3" placeholder="Your post caption appears here"></textarea>
+  <label for="creatorTags">Hashtags</label><textarea id="creatorTags" rows="2" placeholder="#Shorts #Motivation"></textarea>
+  <div class="row"><button class="secondary" id="copyPack" type="button">Copy creator pack</button><button class="secondary" id="useHook" type="button">Use hook as video caption</button></div>
+  <div id="creatorStatus" class="status">Paste a transcript first, then generate your creator pack.</div>
+</div>
+<div id="highlightStatus" class="status">Waiting for a transcript.</div>
+<div id="highlightResults" style="display:grid;gap:10px;margin-top:10px"></div>
+</section>
+<section class="card">
+<h2>Live preview <span class="pill">PREVIEW</span></h2>
+<div class="preview"><video id="video" controls playsinline></video><iframe id="youtubeEmbed" title="YouTube preview" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe><div id="youtubeFallback" class="previewFallback"><p><strong>YouTube preview not available here?</strong></p><p class="sub">Some creators or videos block embedded playback. Open the video on YouTube, or import a video file you are allowed to edit to use trimming and export.</p><button id="fallbackOpenYoutube" type="button">Open in YouTube</button></div><canvas id="canvas"></canvas></div>
+<div class="row" style="margin-top:10px">
+  <div class="stat grow"><small>Duration</small><b id="duration">—</b></div>
+  <div class="stat grow"><small>Clip length</small><b id="clipLength">—</b></div>
+</div>
+<div class="status" id="previewStatus">Select a video to begin.</div>
+</section>
+<section class="card editor wide">
+<h2>1 · Trim your clip</h2>
+<p class="sub">Set start and end times in seconds. You can also seek the video preview and use “Use current time”.</p>
+<div class="two">
+ <div><label for="start">Start (seconds)</label><input type="number" id="start" min="0" step="0.1" value="0"></div>
+ <div><label for="end">End (seconds)</label><input type="number" id="end" min="0" step="0.1" value="30"></div>
+</div>
+<div class="row" style="margin-top:10px">
+ <button class="secondary" id="setStart" disabled>Use current time as start</button>
+ <button class="secondary" id="setEnd" disabled>Use current time as end</button>
+</div>
+<label for="progress">Seek preview</label><input id="progress" type="range" min="0" max="100" value="0" step=".1" disabled>
+<div class="row" style="justify-content:space-between"><span class="sub" id="currentTime">00:00</span><span class="sub" id="totalTime">00:00</span></div>
+</section>
+<section class="card">
+<h2>2 · Format & captions</h2>
+<label for="aspect">Video shape</label>
+<select id="aspect"><option value="9:16">9:16 · Vertical (TikTok/Reels/Shorts)</option><option value="16:9">16:9 · Landscape</option><option value="1:1">1:1 · Square</option><option value="original">Keep original shape</option></select>
+<label for="caption">Caption text</label>
+<textarea id="caption" rows="3" placeholder="Type your hook or subtitle here…"></textarea>
+<p class="sub">Add a hook manually, or try the beta auto-transcriber below. It listens through your phone microphone, so play the video aloud on speaker (not headphones).</p>
+<div class="row" style="margin-top:8px"><button class="secondary" id="autoCaption" type="button">🎙 Auto-generate caption</button><button class="secondary" id="stopCaption" type="button" disabled>Stop transcription</button></div>
+<p class="sub" id="captionStatus">Auto-transcription availability depends on your browser and language.</p>
+<label for="captionStyle">Caption look</label>
+<select id="captionStyle"><option value="bold">Bold animated-style (bold outlined text)</option><option value="clean">Clean white text</option><option value="highlight">Purple highlight bar</option></select>
+<label for="position">Caption position</label>
+<select id="position"><option value="bottom">Bottom safe area</option><option value="middle">Middle</option><option value="top">Top safe area</option></select>
+<p class="sub">Transcription creates editable text, not word-by-word timed subtitles. Review the result before exporting.</p>
+</section>
+<section class="card">
+<h2>3 · Export clip</h2>
+<div class="notice">ClipIt now tries MP4 (H.264/AAC where the browser supports it) first, then falls back to WebM. Some Android browsers cannot encode MP4 directly; if it falls back to WebM and TikTok rejects it, convert the clip to MP4/H.264 before uploading. Keep this page open while exporting.</div>
+<label for="quality">Export quality</label>
+<select id="quality"><option value="4">Standard · 4 Mbps</option><option value="7" selected>High · 7 Mbps</option><option value="10">Very high · 10 Mbps</option></select>
+<label for="batchCount">Split selected time range into how many clips?</label>
+<select id="batchCount"><option value="5" selected>5 clips</option><option value="10">10 clips</option><option value="12">12 clips</option><option value="15">15 clips</option><option value="20">20 clips</option><option value="30">30 clips</option></select>
+<p class="sub">Batch mode divides the selected start/end range into equal-length clips and provides a separate download for each one. It does not automatically detect highlights.</p>
+<div class="row" style="margin-top:14px">
+<button id="export" disabled>⬇ Export one clip</button><button id="batchExport" disabled>✂ Create batch clips</button><button class="secondary" id="stop" disabled>Stop export</button>
+</div>
+<div class="status" id="exportStatus">Import a video before exporting.</div>
+<div id="downloads" class="row" style="margin-top:10px"></div>
+<div class="row" style="margin-top:12px"><a id="download" class="button" style="display:none" download="clipit-export.mp4">Download your clip</a><button id="shareClip" class="secondary" type="button" style="display:none">Share exported file…</button></div>
+</section>
+<section class="card wide">
+<h2>Using video URLs</h2>
+<p>Paste a direct link to a playable video file above, usually ending in .mp4 or .webm. Social-media share/watch links usually cannot be loaded directly; use a permitted video file URL or import a video you have permission to use.</p>
+<p class="sub">TikTok, YouTube, Instagram and other social links usually open a webpage rather than a raw video file, and may require login or block cross-origin access. ClipIt cannot bypass those restrictions or DRM. For those sources, use the platform’s permitted download/export option and import the resulting file. Only edit videos you have permission to use.</p>
+</section>
+</main>
+<footer>ClipIt Studio V2 · Transcript highlight finder, creator pack helper, captions and browser editor. Export sharing sends a file; public share links require a hosting service. Runs locally in your browser. No API-backed AI is connected in this standalone file. Your selected video is not uploaded to a server by this page. Auto-transcription, when enabled, uses browser speech recognition and your microphone.</footer>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const file=$('file'), drop=$('drop'), video=$('video'), canvas=$('canvas'), ctx=canvas.getContext('2d');
+let objectUrl=null, exporting=false, recorder=null, chunks=[], raf=null, stream=null, audioCtx=null, audioSource=null, stopRequested=false, finalUrl=null, currentSource='file', speechRec=null, transcriptParts=[];
+const fmt = s => {if(!Number.isFinite(s))return '00:00';s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const setStatus=(id,msg)=>$(id).textContent=msg;
+function updateLength(){const a=Number($('start').value)||0,b=Number($('end').value)||0;$('clipLength').textContent=fmt(Math.max(0,b-a));}
+function valid(){const d=video.duration,a=Number($('start').value),b=Number($('end').value);return Number.isFinite(d)&&d>0&&a>=0&&b>a&&b<=d+.05;}
+function updateButtons(){const ready=!!video.src&&Number.isFinite(video.duration)&&video.duration>0;['setStart','setEnd','progress','export','batchExport'].forEach(id=>$(id).disabled=!ready||exporting);$('stop').disabled=!exporting;updateLength();}
+function loadVideo(f){if(!f)return;if(!f.type.startsWith('video/')){setStatus('fileStatus','Please choose a video file.');return}
+if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);currentSource='file';$('youtubeEmbed').style.display='none';$('youtubeEmbed').removeAttribute('src');$('youtubeFallback').style.display='none';video.style.display='block';video.crossOrigin='anonymous';video.src=objectUrl;video.load();$('fileStatus').textContent=f.name+' · '+(f.size/1024/1024).toFixed(1)+' MB · local file';setStatus('previewStatus','Loading video…');$('download').style.display='none';$('shareClip').style.display='none';}
+function resolveShareUrl(input){
+ let u;try{u=new URL(input)}catch(e){return {error:'That link is not valid. Copy the full share link, including https://.'}}
+ if(!['http:','https:'].includes(u.protocol))return {error:'Use an http:// or https:// link.'};
+ const host=u.hostname.toLowerCase().replace(/^www\./,'');
+ // Convert common cloud-storage share URLs to their file-serving variants.
+ if(host==='drive.google.com'||host==='docs.google.com'){
+   const m=u.pathname.match(/\/file\/d\/([\w-]+)/)||u.pathname.match(/\/uc\/.*[?&]id=([\w-]+)/);
+   const id=m&&m[1]||u.searchParams.get('id');
+   if(id)return {url:'https://drive.google.com/uc?export=download&id='+encodeURIComponent(id),kind:'Google Drive'};
+   return {url:u.href,kind:'Google Drive'};
+ }
+ if(host==='dropbox.com'||host==='dropboxusercontent.com'){
+   u.searchParams.set('dl','1');return {url:u.href,kind:'Dropbox'};
+ }
+ if(host==='1drv.ms'||host==='onedrive.live.com')return {url:u.href,kind:'OneDrive'};
+ if(host==='youtube.com'||host==='youtu.be'||host==='m.youtube.com'||host==='music.youtube.com') { let id=''; if(host==='youtu.be')id=u.pathname.split('/').filter(Boolean)[0]||''; else if(u.pathname==='/watch')id=u.searchParams.get('v')||''; else {const m=u.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/);if(m)id=m[1]} if(!/^[A-Za-z0-9_-]{11}$/.test(id))return {unsupported:'I could not identify a YouTube video in that link. Copy the full video share link and try again.'};return {youtube:'https://www.youtube.com/embed/'+id+'?playsinline=1&rel=0',original:'https://www.youtube.com/watch?v='+id,kind:'YouTube preview'}; }
+ if(host==='tiktok.com'||host.endsWith('.tiktok.com'))return {unsupported:'TikTok share links cannot be imported directly because TikTok restricts access to the video stream. Save/download a video you have permission to use, then import the video file.'};
+ if(host==='instagram.com'||host.endsWith('.instagram.com'))return {unsupported:'Instagram share links cannot be imported directly into this editor. Import a video file you have permission to use instead.'};
+ if(host==='facebook.com'||host==='fb.watch'||host.endsWith('.facebook.com'))return {unsupported:'Facebook share pages generally cannot be loaded directly for editing. Import an authorized video file or try a direct MP4 link.'};
+ return {url:u.href,kind:'video URL'};
+}
+function loadVideoUrl(){
+ const raw=$('videoUrl').value.trim();if(!raw){setStatus('fileStatus','Paste a video share link first.');return}
+ const resolved=resolveShareUrl(raw);
+ if(resolved.error){setStatus('fileStatus',resolved.error);return}
+ if(resolved.unsupported){setStatus('fileStatus',resolved.unsupported);setStatus('previewStatus','This platform share link is not directly importable.');return}
+ if(resolved.youtube){if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}currentSource='youtube-embed';window.clipItYoutubeOriginal=resolved.original||raw;video.pause();video.removeAttribute('src');video.load();video.style.display='none';const frame=$('youtubeEmbed');const fallback=$('youtubeFallback');fallback.style.display='none';frame.src='about:blank';frame.style.display='block';frame.src=resolved.youtube+'&widget_referrer='+encodeURIComponent(location.href.startsWith('http')?location.origin:'https://clipit-studio.local');$('fileStatus').textContent='YouTube link recognized · embedded preview only';setStatus('previewStatus','Loading YouTube preview… If the video still says “Watch video on YouTube”, that video or local-file browser context is blocking embedding. Use Open in YouTube below. YouTube links do not provide editable footage; import a video file you are authorized to use for trimming and export.');$('duration').textContent='—';$('clipLength').textContent='—';$('download').style.display='none';$('shareClip').style.display='none';updateButtons();window.clearTimeout(window.clipItEmbedTimer);window.clipItEmbedTimer=window.setTimeout(()=>{if(currentSource==='youtube-embed'){fallback.style.display='block';setStatus('previewStatus','If the player is still blank, embedding is blocked or unavailable in this local app. Open the video on YouTube, or host ClipIt on HTTPS and test again.');}},7000);return}
+ const u=new URL(resolved.url);
+ if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}
+ currentSource='url';$('youtubeEmbed').style.display='none';$('youtubeEmbed').removeAttribute('src');$('youtubeFallback').style.display='none';video.style.display='block';video.pause();video.removeAttribute('src');video.load();video.crossOrigin='anonymous';video.src=u.href;video.load();
+ $('fileStatus').textContent='Trying '+resolved.kind+' link: '+u.hostname;
+ setStatus('previewStatus','Loading link… If playback fails, the host may require sign-in, block browser access (CORS), or not provide a direct video file.');$('download').style.display='none';
+}
+$('loadUrl').addEventListener('click',loadVideoUrl);$('videoUrl').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();loadVideoUrl()}});
+$('openYoutube').addEventListener('click',()=>{const raw=$('videoUrl').value.trim(),r=resolveShareUrl(raw);if(r.youtube){window.open(raw,'_blank','noopener,noreferrer')}else if(raw){try{const u=new URL(raw);if(/(^|\.)youtube\.com$|(^|\.)youtu\.be$/.test(u.hostname))window.open(u.href,'_blank','noopener,noreferrer');else setStatus('highlightStatus','Paste a YouTube URL first.')}catch(e){setStatus('highlightStatus','Paste a valid YouTube URL first.')}}else setStatus('highlightStatus','Paste a YouTube URL first.')});
+$('fallbackOpenYoutube').addEventListener('click',()=>{const url=window.clipItYoutubeOriginal||$('videoUrl').value.trim();if(url)window.open(url,'_blank','noopener,noreferrer')});
+$('youtubeEmbed').addEventListener('error',()=>{ $('youtubeFallback').style.display='block'; setStatus('previewStatus','YouTube embed failed to load. Open it on YouTube or test ClipIt from an HTTPS-hosted page.'); });
+function parseTimeStamp(t){const m=t.match(/(?:\[|\()?\s*(?:(\d{1,2}):)?(\d{1,2}):(\d{2})(?:\]|\))?/);if(!m)return null;return (Number(m[1]||0)*3600)+(Number(m[2])*60)+Number(m[3]);}
+function analyzeTranscript(){const raw=$('transcriptInput').value.trim();const status=$('highlightStatus'),out=$('highlightResults');out.innerHTML='';if(!raw){status.textContent='Paste a timestamped transcript first.';return}
+ const lines=raw.split(/\n+/).map(line=>{const m=line.match(/^\s*(?:\[)?((?:\d{1,2}:)?\d{1,2}:\d{2})(?:\])?\s*[-–—:]?\s*(.*)$/);if(!m)return null;const sec=parseTimeStamp(m[1]);return sec===null?null:{time:sec,text:m[2].trim()}}).filter(x=>x&&x.text);
+ if(lines.length<2){status.textContent='I could not find enough timestamped lines. Paste transcript lines like [00:12] spoken words or 1:12 spoken words.';return}
+ const terms=[['how to',5],['secret',4],['mistake',4],['never',3],['always',2],['money',3],['success',3],['fail',3],['learn',2],['truth',3],['important',2],['because',2],['why',2],['first',1],['best',2],['change',3],['life',2],['remember',2],['tip',2],['warning',3],['stop',3],['start',2],['proven',3],['number one',3],['the problem',3],['the answer',3],['you need',2],['you should',2],['instead',2],['free',1],['easy',1]];
+ const candidates=lines.map((line,i)=>{let score=Math.min(4,line.text.length/80);const lower=line.text.toLowerCase();for(const [term,weight] of terms)if(lower.includes(term))score+=weight; if(/[!?]/.test(line.text))score+=1;if(/\d/.test(line.text))score+=.5;if(i===0)score+=.2;return {...line,score}}).sort((a,b)=>b.score-a.score);
+ const chosen=[];for(const c of candidates){if(chosen.every(x=>Math.abs(x.time-c.time)>=15)){chosen.push(c);if(chosen.length===5)break}}
+ if(!chosen.length){status.textContent='No highlight moments found.';return}chosen.sort((a,b)=>a.time-b.time);status.textContent='Suggested '+chosen.length+' highlight moments. These are heuristic suggestions from wording, not an AI understanding of the full video. Review each moment before publishing.';
+ const videoId=(()=>{try{const u=new URL($('videoUrl').value.trim());if(u.hostname.includes('youtu.be'))return u.pathname.split('/').filter(Boolean)[0];return u.searchParams.get('v')||((u.pathname.match(/\/(?:shorts|embed|live)\/([^/]+)/)||[])[1])||''}catch(e){return ''}})();
+ chosen.forEach((c,i)=>{const start=Math.max(0,c.time-3),end=start+15;const card=document.createElement('div');card.className='stat';const title=document.createElement('b');title.textContent='Clip '+(i+1)+' · '+fmt(start)+'–'+fmt(end);const text=document.createElement('p');text.textContent=c.text;const actions=document.createElement('div');actions.className='row';const open=document.createElement('button');open.className='secondary';open.textContent='Open moment on YouTube';open.onclick=()=>{if(videoId)window.open('https://www.youtube.com/watch?v='+encodeURIComponent(videoId)+'&t='+Math.floor(start)+'s','_blank','noopener,noreferrer');else setStatus('highlightStatus','Add a valid YouTube link above to open this moment.')};const set=document.createElement('button');set.textContent='Use these times';set.onclick=()=>{if(video.src&&Number.isFinite(video.duration)){ $('start').value=Math.min(start,Math.max(0,video.duration-0.1)).toFixed(1);$('end').value=Math.min(end,video.duration).toFixed(1);updateLength();setStatus('previewStatus','Highlight times copied into the editor. Import an authorized video file to preview/export.')}else setStatus('highlightStatus','Suggested window: '+fmt(start)+'–'+fmt(end)+'. Import an authorized video file to edit/export this section.')};actions.append(open,set);card.append(title,text,actions);out.append(card)});
+}
+$('analyzeTranscript').addEventListener('click',analyzeTranscript);$('clearTranscript').addEventListener('click',()=>{$('transcriptInput').value='';$('highlightResults').innerHTML='';setStatus('highlightStatus','Waiting for a transcript.')});
+function transcriptText(){return $('transcriptInput').value.trim()}
+function words(text){return (text.toLowerCase().match(/[a-z0-9']+/g)||[])}
+function titleCase(s){return s? s.charAt(0).toUpperCase()+s.slice(1):s}
+function generateCreatorPack(){
+ const raw=transcriptText(); if(!raw){setStatus('creatorStatus','Paste a timestamped transcript first.');return}
+ const clean=raw.replace(/^\s*(?:\[)?(?:\d{1,2}:)?\d{1,2}:\d{2}(?:\])?\s*[-–—:]?\s*/gm,' ').replace(/\s+/g,' ').trim();
+ const sentence=(clean.match(/[^.!?]+[.!?]?/g)||[]).map(x=>x.trim()).filter(x=>x.length>18);
+ const base=(sentence.sort((a,b)=>b.length-a.length)[0]||clean).slice(0,150).replace(/[.!?]+$/,'');
+ const tone=$('creatorTone').value; let prefix='Here is the idea you should remember:';
+ if(tone==='motivational')prefix='Your reminder to keep going:'; if(tone==='educational')prefix='Quick lesson:'; if(tone==='bold')prefix='Most people miss this:'; if(tone==='professional')prefix='Key takeaway:';
+ const hook=titleCase(prefix+' '+base).slice(0,115);
+ const caption= tone==='professional' ? 'Key takeaway: '+base+'. Save this for later and share it with someone who may find it useful.' : tone==='educational' ? 'Here is a useful point from this video: '+base+'. Save this clip and revisit the lesson.' : tone==='bold' ? 'Wait for the key point: '+base+'. What do you think? Share your take below.' : 'Keep this in mind: '+base+'. Small steps and consistent action matter. Save this for later.';
+ const stop=new Set(['this','that','with','from','have','your','you','are','the','and','for','but','was','were','they','them','then','than','into','about','what','when','where','which','will','would','could','should','there','their','just','like','have','been','being','also','very','more','most','some','here','because','today','video']);
+ const counts={}; words(clean).forEach(w=>{if(w.length>3&&!stop.has(w)&&!/^\d+$/.test(w))counts[w]=(counts[w]||0)+1});
+ const tags=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(x=>'#'+x[0]);
+ const fixedTags=tags.length?tags:['#Shorts','#CreatorTips'];
+ const platform=$('platform').value; if(platform==='YouTube Shorts')fixedTags.unshift('#Shorts'); else if(platform==='TikTok')fixedTags.unshift('#TikTok'); else if(platform==='Instagram Reels')fixedTags.unshift('#Reels');
+ $('creatorHook').value=hook; $('creatorCaption').value=caption; $('creatorTags').value=[...new Set(fixedTags)].slice(0,6).join(' '); setStatus('creatorStatus','Creator pack drafted from transcript text. Review for accuracy and avoid misleading claims.');
+}
+$('generatePack').addEventListener('click',generateCreatorPack);
+$('copyPack').addEventListener('click',()=>{const pack='HOOK: '+$('creatorHook').value+'\n\nCAPTION: '+$('creatorCaption').value+'\n\nHASHTAGS: '+$('creatorTags').value;if(!pack.replace(/\s/g,'')){setStatus('creatorStatus','Generate a pack first.');return}navigator.clipboard?.writeText(pack).then(()=>setStatus('creatorStatus','Creator pack copied.')).catch(()=>setStatus('creatorStatus','Clipboard unavailable here; select and copy the text manually.'))});
+$('useHook').addEventListener('click',()=>{if(!$('creatorHook').value.trim()){setStatus('creatorStatus','Generate a creator pack first.');return}$('caption').value=$('creatorHook').value;setStatus('captionStatus','Hook copied into the video caption field.');$('caption').scrollIntoView({behavior:'smooth',block:'center'})});
+$('copyAIPrompt').addEventListener('click',()=>{const prompt='Act as a short-form video clipping editor. From the timestamped transcript below, identify exactly five distinct high-retention moments suitable for 15-second clips. For each, provide start timestamp, end timestamp, a concise reason, a strong but truthful hook, a social caption, and 3-5 relevant hashtags. Do not invent claims or context. Return a table. Transcript:\n'+transcriptText();if(!transcriptText()){setStatus('creatorStatus','Paste a transcript first.');return}navigator.clipboard?.writeText(prompt).then(()=>setStatus('creatorStatus','AI prompt copied. Paste it into your chosen AI assistant; no AI API is connected inside this file.')).catch(()=>{const t=document.createElement('textarea');t.value=prompt;document.body.append(t);t.select();setStatus('creatorStatus','Clipboard unavailable. Prompt prepared; use browser copy or select the text.');t.remove()})});
+
+function stopAutoCaption(){try{if(speechRec)speechRec.stop()}catch(e){}$('stopCaption').disabled=true;$('autoCaption').disabled=false;}
+$('stopCaption').addEventListener('click',stopAutoCaption);
+$('autoCaption').addEventListener('click',()=>{
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){setStatus('captionStatus','Auto-transcription is not available in this browser. Try current Chrome/Edge, or use a transcription app and paste its text here.');return}
+ if(!video.src||!Number.isFinite(video.duration)){setStatus('captionStatus','Load a video first.');return}
+ try{
+  speechRec=new SR();speechRec.continuous=true;speechRec.interimResults=true;speechRec.lang='en-US';transcriptParts=[];
+  speechRec.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const phrase=e.results[i][0].transcript;if(e.results[i].isFinal)transcriptParts.push(phrase);else interim+=phrase+' '}const full=transcriptParts.join(' ').trim();$('caption').value=(full+(interim?' '+interim.trim():'')).trim();setStatus('captionStatus',full?'Transcribing… review and correct the text when finished.':'Listening for speech…');};
+  speechRec.onerror=e=>{setStatus('captionStatus','Transcription error: '+e.error+'. Allow microphone access and keep the video audible on speaker.');stopAutoCaption()};
+  speechRec.onend=()=>{const t=$('caption').value.trim();setStatus('captionStatus',t?'Transcription stopped. Review the generated text; accuracy may vary.':'No speech captured. Make sure microphone access is allowed and video audio is playing aloud.');stopAutoCaption()};
+  speechRec.start();$('autoCaption').disabled=true;$('stopCaption').disabled=false;setStatus('captionStatus','Listening through your microphone. Turn up speaker volume and press Play on the video.');video.currentTime=Number($('start').value)||0;video.play().catch(()=>setStatus('captionStatus','Tap Play on the video, then keep it audible through the phone speaker.'));
+ }catch(e){setStatus('captionStatus','Could not start transcription: '+e.message);stopAutoCaption()}
+});
+drop.addEventListener('click',()=>file.click());file.addEventListener('change',e=>loadVideo(e.target.files[0]));
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.style.borderColor='#c4b5fd'});drop.addEventListener('dragleave',()=>drop.style.borderColor='');drop.addEventListener('drop',e=>{e.preventDefault();drop.style.borderColor='';loadVideo(e.dataTransfer.files[0])});
+video.addEventListener('loadedmetadata',()=>{ $('duration').textContent=fmt(video.duration);$('totalTime').textContent=fmt(video.duration);$('start').value='0';$('end').value=String(Math.min(30,video.duration).toFixed(1));$('progress').max=video.duration;$('progress').value=0;setStatus('previewStatus','Video ready. Trim the section you want.');updateButtons();});
+video.addEventListener('timeupdate',()=>{$('currentTime').textContent=fmt(video.currentTime);if(!$('progress').matches(':active'))$('progress').value=video.currentTime;});
+video.addEventListener('error',()=>{const msg=currentSource==='url'?'Could not load this URL. It may be a platform watch-page link, require login, block CORS, or use an unsupported format. Try a direct MP4/WebM file URL or import the video file instead.':'This video format may not be supported by your browser. Try MP4 (H.264/AAC) or WebM.';setStatus('previewStatus',msg);if(currentSource==='url')setStatus('fileStatus','URL load failed. Many social-media page URLs cannot be used directly.');});
+$('progress').addEventListener('input',()=>{video.currentTime=Number($('progress').value)});
+$('setStart').addEventListener('click',()=>{$('start').value=video.currentTime.toFixed(1);if(Number($('end').value)<=video.currentTime)$('end').value=Math.min(video.duration,video.currentTime+5).toFixed(1);updateLength()});
+$('setEnd').addEventListener('click',()=>{$('end').value=video.currentTime.toFixed(1);if(Number($('end').value)<=Number($('start').value))$('start').value=Math.max(0,video.currentTime-5).toFixed(1);updateLength()});
+$('start').addEventListener('input',updateLength);$('end').addEventListener('input',updateLength);
+function dims(){let vw=video.videoWidth||1280,vh=video.videoHeight||720,shape=$('aspect').value;let ratio=shape==='9:16'?9/16:shape==='16:9'?16/9:shape==='1:1'?1:vw/vh;let h=720,w=Math.round(h*ratio);if(w>1280){w=1280;h=Math.round(w/ratio)}return [w,h]}
+function drawFrame(){if(!exporting)return;const [w,h]=dims();if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}
+ctx.fillStyle='#05060a';ctx.fillRect(0,0,w,h);
+const vw=video.videoWidth||w,vh=video.videoHeight||h,scale=Math.max(w/vw,h/vh),dw=vw*scale,dh=vh*scale;
+ctx.save();ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();ctx.drawImage(video,(w-dw)/2,(h-dh)/2,dw,dh);ctx.restore();
+const text=$('caption').value.trim(),style=$('captionStyle').value,pos=$('position').value;
+if(text){const maxWidth=w*.88,fontSize=Math.max(22,Math.min(54,w*.065));ctx.font=`900 ${fontSize}px system-ui, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+const words=text.split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);
+const lineH=fontSize*1.22,totalH=lines.length*lineH;let y=pos==='top'?h*.13+totalH/2:pos==='middle'?h/2: h*.82-totalH/2;
+if(style==='highlight'){const maxLine=Math.max(...lines.map(l=>ctx.measureText(l).width));ctx.fillStyle='#6d28d9e8';ctx.fillRect((w-maxLine)/2-18,y-totalH/2-12,maxLine+36,totalH+24)}
+lines.forEach((l,i)=>{const yy=y+(i-(lines.length-1)/2)*lineH;if(style!=='highlight'){ctx.lineWidth=fontSize*.16;ctx.strokeStyle='#05050a';ctx.lineJoin='round';ctx.strokeText(l,w/2,yy,maxWidth)}ctx.fillStyle=style==='highlight'?'#ffffff':style==='clean'?'#ffffff':'#fff36b';ctx.fillText(l,w/2,yy,maxWidth)});
+}
+raf=requestAnimationFrame(drawFrame);
+}
+function supportedMime(){if(!('MediaRecorder' in window))return '';for(const m of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm;codecs=vp9,opus','video/webm']){try{if(MediaRecorder.isTypeSupported(m))return m}catch(e){}}return ''}
+function fileExt(mime){return mime&&mime.toLowerCase().includes('mp4')?'mp4':'webm'}
+function formatLabel(mime){return fileExt(mime).toUpperCase()+(fileExt(mime)==='mp4'?' · browser MP4 encoder':' · WebM fallback')}
+$('export').addEventListener('click',async()=>{
+if(!valid()){setStatus('exportStatus','Choose a valid start and end time within the video duration.');return}
+if(!('MediaRecorder'in window)||!canvas.captureStream){setStatus('exportStatus','Your browser does not support in-browser export. Try updating Microsoft Edge.');return}
+stopRequested=false;chunks=[];exporting=true;$('download').style.display='none';updateButtons();setStatus('exportStatus','Preparing video… Keep this tab open.');
+const start=Number($('start').value),end=Number($('end').value);const mime=supportedMime();if(!mime){exporting=false;updateButtons();setStatus('exportStatus','This browser reports no supported recording codec. Update Edge or use a video editor that exports MP4/H.264.');return}
+try{
+video.pause();const [cw,ch]=dims();canvas.width=cw;canvas.height=ch;video.currentTime=start;
+await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Could not seek to clip start.')),10000);const done=()=>{clearTimeout(timer);resolve()};video.addEventListener('seeked',done,{once:true});});
+stream=canvas.captureStream(30);
+try{if(video.captureStream){const vs=video.captureStream();const tracks=vs.getAudioTracks();tracks.forEach(t=>stream.addTrack(t));}}catch(e){}
+recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:Number($('quality').value)*1000000});
+recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+recorder.onerror=e=>{setStatus('exportStatus','Export failed: '+(e.error?.message||'recording error'));cleanup()};
+recorder.onstop=()=>{const blob=new Blob(chunks,{type:mime});if(finalUrl)URL.revokeObjectURL(finalUrl);finalUrl=URL.createObjectURL(blob);const a=$('download');a.href=finalUrl;a.download='clipit-'+Date.now()+'.'+fileExt(mime);a.style.display='inline-flex';$('shareClip').style.display='inline-flex';$('shareClip').dataset.filename=a.download;window.clipItLastBlob=blob;setStatus('exportStatus','Clip ready · '+(blob.size/1024/1024).toFixed(1)+' MB · '+formatLabel(mime)+'. Use Share clip to send the exported file from your phone. This shares the file, not a public URL.');cleanup();};
+recorder.start(250);drawFrame();await video.play();setStatus('exportStatus','Recording clip… '+fmt(start)+' to '+fmt(end));
+const check=()=>{if(!exporting)return;if(stopRequested||video.currentTime>=end){video.pause();if(recorder&&recorder.state!=='inactive')recorder.stop();return}setStatus('exportStatus','Recording… '+fmt(video.currentTime)+' / '+fmt(end));setTimeout(check,150)};
+check();
+}catch(e){setStatus('exportStatus',(currentSource==='url'?'URL export failed. The video host may block CORS/canvas access. Download a permitted copy and import the file. ':'Could not export this video: ')+e.message+'. Try another video format or a shorter clip.');cleanup()}
+});
+
+async function recordSegment(start,end,index,total){
+  const mime=supportedMime();
+  if(!mime)throw new Error('No supported recording codec was found. Update Edge or use an editor that exports MP4/H.264.');
+  video.pause();const [cw,ch]=dims();canvas.width=cw;canvas.height=ch;video.currentTime=start;
+  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Could not seek to clip start.')),10000);video.addEventListener('seeked',()=>{clearTimeout(timer);resolve()},{once:true});});
+  stream=canvas.captureStream(30);
+  try{if(video.captureStream){const vs=video.captureStream();vs.getAudioTracks().forEach(t=>stream.addTrack(t));}}catch(e){}
+  const localChunks=[];
+  recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:Number($('quality').value)*1000000});
+  recorder.ondataavailable=e=>{if(e.data&&e.data.size)localChunks.push(e.data)};
+  const stopped=new Promise((resolve,reject)=>{recorder.onerror=e=>reject(new Error(e.error?.message||'recording error'));recorder.onstop=()=>resolve(new Blob(localChunks,{type:mime}));});
+  recorder.start(250);drawFrame();
+  await video.play();
+  await new Promise((resolve,reject)=>{
+    const check=()=>{if(stopRequested){video.pause();if(recorder&&recorder.state!=='inactive')recorder.stop();resolve();return}
+      if(video.currentTime>=end){video.pause();if(recorder&&recorder.state!=='inactive')recorder.stop();resolve();return}
+      setStatus('exportStatus',`Creating clip ${index} of ${total} · ${fmt(video.currentTime)} / ${fmt(end)}`);
+      setTimeout(check,100);
+    };check();
+  });
+  const blob=await stopped;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  return blob;
+}
+$('batchExport').addEventListener('click',async()=>{
+  if(!valid()){setStatus('exportStatus','Choose a valid start and end time within the video duration.');return}
+  if(!('MediaRecorder'in window)||!canvas.captureStream){setStatus('exportStatus','Your browser does not support in-browser export. Try updating Microsoft Edge.');return}
+  const total=Number($('batchCount').value),rangeStart=Number($('start').value),rangeEnd=Number($('end').value),segment=(rangeEnd-rangeStart)/total;
+  if(segment<1){setStatus('exportStatus','Select a longer source range so each clip is at least about one second.');return}
+  exporting=true;stopRequested=false;$('download').style.display='none';$('downloads').innerHTML='';updateButtons();
+  try{
+    for(let i=0;i<total;i++){
+      if(stopRequested)break;
+      const a=rangeStart+i*segment,b=i===total-1?rangeEnd:rangeStart+(i+1)*segment;
+      const blob=await recordSegment(a,b,i+1,total);
+      if(blob.size===0)throw new Error('An empty clip was recorded. Try another source video.');
+      const url=URL.createObjectURL(blob),link=document.createElement('a');
+      link.href=url;link.download=`clipit-clip-${String(i+1).padStart(2,'0')}.${fileExt(blob.type||mime)}`;link.className='button';link.textContent=`Download clip ${i+1}`;
+      link.style.margin='3px';$('downloads').appendChild(link);
+      // Keep object URLs alive for the download links while this page remains open.
+    }
+    const made=$('downloads').children.length;
+    setStatus('exportStatus',stopRequested?`Stopped. ${made} clip(s) created so far.`:`Finished: ${made} separate clips are ready below. Tap each Download button to save it.`);
+  }catch(e){setStatus('exportStatus','Batch export stopped: '+e.message+'. Try fewer clips or a shorter source range.')}
+  finally{cleanup()}
+});
+
+$('shareClip').addEventListener('click',async()=>{const blob=window.clipItLastBlob;if(!blob){setStatus('exportStatus','Export a clip first.');return}const name=$('shareClip').dataset.filename||'clipit-clip.'+fileExt(blob.type);const fileObj=new File([blob],name,{type:blob.type||'video/webm'});try{if(navigator.share&&navigator.canShare&&navigator.canShare({files:[fileObj]})){await navigator.share({files:[fileObj],title:'ClipIt Studio clip',text:'Created with ClipIt Studio'});setStatus('exportStatus','Share sheet opened. Choose the app or person to send your clip to.')}else{setStatus('exportStatus','Your browser cannot share this video file directly. Tap Download your clip, then attach it in WhatsApp, TikTok, or another app.')}}catch(e){if(e.name!=='AbortError')setStatus('exportStatus','Sharing was unavailable. Download the clip and share it from your phone files.')}});
+function cleanup(){exporting=false;if(raf)cancelAnimationFrame(raf);raf=null;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}updateButtons();if(video.src)video.pause()}
+$('stop').addEventListener('click',()=>{stopRequested=true;if(recorder&&recorder.state!=='inactive')recorder.stop();else cleanup()});
+$('aspect').addEventListener('change',()=>{if(exporting)return;const [w,h]=dims();canvas.width=w;canvas.height=h});
+window.addEventListener('beforeunload',()=>{if(objectUrl)URL.revokeObjectURL(objectUrl);if(finalUrl)URL.revokeObjectURL(finalUrl)});
+})();
+</script>
+</body>
+</html>
